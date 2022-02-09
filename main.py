@@ -2,6 +2,8 @@
 
 import os
 import json
+import shutil
+import hashlib
 
 home = os.path.expanduser('~')
 r2dir = home + "/.r2/"
@@ -26,6 +28,25 @@ def file_read(filename):
     f = open(filename, "r")
     return f.read()
 
+def hash_file(filename):
+    BLOCKSIZE = 65536
+    hasher = hashlib.sha1()
+    with open(filename, 'rb') as afile:
+        buf = afile.read(BLOCKSIZE)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(BLOCKSIZE)
+    return hasher.hexdigest()
+
+def build_generation():
+    config = json.loads(file_read(defs))
+    for a, b in config.items():
+        if a == "r2config":
+            path = b['path']
+            hash = hash_file(path)
+            shutil.copyfile(path, store + hash + "-" + os.path.basename(path))
+    return "hash"
+
 def init():
     mkdir(r2dir)
     mkdir(store)
@@ -37,6 +58,7 @@ def init():
         }
     }
     file_overwrite(defs, json.dumps(initial_state))
+    new_gen = build_generation()
 
 def add_file_to_def(name, path):
     pass
