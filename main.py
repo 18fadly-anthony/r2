@@ -103,16 +103,18 @@ def main():
     parser.add_argument('--init', action='store_true', help='Setup r2')
     parser.add_argument('-a', '--add-file', nargs = 2, type = str, default = '',
                         metavar = ('<name>', '<path>'), help = "Add file to r2")
+    parser.add_argument('-q', '--quick-add', nargs = 1, type = str, default = '',
+                        metavar = ('<file>'), help = "quick add file")
 
     args = parser.parse_args()
 
     if args.init:
         init()
         exit()
-
     elif args.add_file != '':
         add_file(args.add_file[0], args.add_file[1])
-
+    elif args.quick_add != '':
+        add_file(args.quick_add[0], os.getcwd() + "/" + args.quick_add[0])
     else:
         print("try --help")
 
