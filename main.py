@@ -45,33 +45,54 @@ def build_generation(n):
     file_overwrite(r2dir + "latest_generation", n)
     file_overwrite(r2dir + "current_generation", n)
     config = json.loads(file_read(defs))
+    #for a, b in config['definitions'].items():
     for a, b in config.items():
-        if a == "r2config":
-            path = b['path']
-            target = b['target']
-            hash = hash_file(path)
-            store_location = store + hash + "-" + target
+        path = b['path']
+        target = b['target']
+        hash = hash_file(path)
+        store_location = store + hash + "-" + target
+        if not os.path.exists(store_location):
             shutil.copyfile(path, store_location)
-            if not os.path.exists(gendir + n + "/" + target):
-                os.symlink(store_location, gendir + n + "/" + target)
+        if not os.path.exists(store_location + "-reference"):
+            file_overwrite(store_location + "-reference", n)
+        if not os.path.exists(gendir + n + "/" + target):
+            os.symlink(store_location, gendir + n + "/" + target)
 
 def init():
     mkdir(r2dir)
     mkdir(store)
     mkdir(gendir)
     initial_state = {
-        "r2config": {
-            "path": defs,
-            "reference": "core",
-            "target": "config.json"
-        }
+        #"definitions": {
+            "r2config": {
+                "path": defs,
+                "target": "config.json"
+            }
+        #}
     }
     file_overwrite(defs, json.dumps(initial_state))
     build_generation("0")
-    os.remove(defs)
 
-def add_file_to_def(name, path):
-    pass
+def add_file(name, path):
+    if not os.path.exists(path):
+        print("Error: no such path " + path)
+        return
+    current = file_read(r2dir + "current_generation")
+    latest = file_read(r2dir + "latest_generation")
+    if os.path.exists(defs):
+        def_location = defs
+    else:
+        def_location = gendir + current
+    config = json.loads(file_read(def_location))
+    new = {
+        name: {
+            "path": path,
+            "target": name
+        }
+    }
+    config.update(new)
+    file_overwrite(defs, json.dumps(config))
+    build_generation(str(int(latest) + 1))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -80,11 +101,18 @@ def main():
     )
 
     parser.add_argument('--init', action='store_true', help='Setup r2')
+    parser.add_argument('-a', '--add-file', nargs = 2, type = str, default = '',
+                        metavar = ('<name>', '<path>'), help = "Add file to r2")
 
     args = parser.parse_args()
 
     if args.init:
         init()
+        exit()
+
+    elif args.add_file != '':
+        add_file(args.add_file[0], args.add_file[1])
+
     else:
         print("try --help")
 
