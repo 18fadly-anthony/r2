@@ -8,6 +8,7 @@ import hashlib
 home = os.path.expanduser('~')
 r2dir = home + "/.r2/"
 store = r2dir + "store/"
+gendir = r2dir + "generations/"
 defs = r2dir + "config.json"
 
 def mkdir(d):
@@ -38,18 +39,24 @@ def hash_file(filename):
             buf = afile.read(BLOCKSIZE)
     return hasher.hexdigest()
 
-def build_generation():
+def build_generation(n):
+    mkdir(gendir + n)
+    file_overwrite(r2dir + "latest_generation", n)
+    file_overwrite(r2dir + "current_generation", n)
     config = json.loads(file_read(defs))
     for a, b in config.items():
         if a == "r2config":
             path = b['path']
+            target = b['target']
             hash = hash_file(path)
-            shutil.copyfile(path, store + hash + "-" + os.path.basename(path))
-    return "hash"
+            store_location = store + hash + "-" + target
+            shutil.copyfile(path, store_location)
+            os.symlink(store_location, gendir + n + "/" + target)
 
 def init():
     mkdir(r2dir)
     mkdir(store)
+    mkdir(gendir)
     initial_state = {
         "r2config": {
             "path": defs,
@@ -58,7 +65,8 @@ def init():
         }
     }
     file_overwrite(defs, json.dumps(initial_state))
-    new_gen = build_generation()
+    build_generation("0")
+    os.remove(defs)
 
 def add_file_to_def(name, path):
     pass
