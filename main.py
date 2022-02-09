@@ -4,6 +4,7 @@ import os
 import json
 import shutil
 import hashlib
+import argparse
 
 home = os.path.expanduser('~')
 r2dir = home + "/.r2/"
@@ -51,7 +52,8 @@ def build_generation(n):
             hash = hash_file(path)
             store_location = store + hash + "-" + target
             shutil.copyfile(path, store_location)
-            os.symlink(store_location, gendir + n + "/" + target)
+            if not os.path.exists(gendir + n + "/" + target):
+                os.symlink(store_location, gendir + n + "/" + target)
 
 def init():
     mkdir(r2dir)
@@ -72,8 +74,19 @@ def add_file_to_def(name, path):
     pass
 
 def main():
-    init()
+    parser = argparse.ArgumentParser(
+        description = "",
+        epilog = ""
+    )
 
+    parser.add_argument('--init', action='store_true', help='Setup r2')
+
+    args = parser.parse_args()
+
+    if args.init:
+        init()
+    else:
+        print("try --help")
 
 if __name__ == "__main__":
     try:
