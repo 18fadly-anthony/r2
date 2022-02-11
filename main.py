@@ -105,6 +105,8 @@ def main():
                         metavar = ('<name>', '<path>'), help = "Add file to r2")
     parser.add_argument('-q', '--quick-add', nargs = 1, type = str, default = '',
                         metavar = ('<file>'), help = "quick add file")
+    parser.add_argument('-c', '--cat-file', nargs = 2, type = str, default = '',
+                        metavar = ('<name>', '<generation>'), help = "show file contents")
 
     args = parser.parse_args()
 
@@ -115,6 +117,9 @@ def main():
         add_file(args.add_file[0], args.add_file[1])
     elif args.quick_add != '':
         add_file(args.quick_add[0], os.getcwd() + "/" + args.quick_add[0])
+    elif args.cat_file != '':
+        # TODO this is just a POC rn and breaks if the generation doesn't exist
+        print(file_read(gendir + args.cat_file[1] + "/" + args.cat_file[0]))
     else:
         print("try --help")
 
